@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -e
+
+mkdir -p build
+
+g++ -g3 verify.cpp -masm=intel -o build/verify-d
+gdb -batch -ex 'set disassembly-flavor=intel' \
+  -ex 'file build/verify-d' -ex 'disassemble main' \
+  -ex 'disassemble func' 2>/dev/null | sed 's/.*>://' > build/verify-d.asm
+# NOTE(Ryan): Redirect stderr to avoid a strange "preceeding space" GDB error  
+# NOTE(Ryan): Sed removes byte offset 
+
+g++ -O3 verify.cpp -masm=intel -o build/verify-o
+gdb -batch -ex 'set disassembly-flavor=intel' \
+  -ex 'file build/verify-o' -ex 'disassemble main' \
+  -ex 'disassemble func' 2>/dev/null | sed 's/.*>://' > build/verify-o.asm
+
