@@ -4,15 +4,19 @@ set -e
 
 mkdir -p build
 
-g++ -g3 verify.cpp -masm=intel -o build/verify-d
+g++ -g3 assembly.cpp -masm=intel -o build/assembly-d
 gdb -batch -ex 'set disassembly-flavor=intel' \
-  -ex 'file build/verify-d' -ex 'disassemble main' \
-  -ex 'disassemble func' 2>/dev/null | sed 's/.*>://' > build/verify-d.asm
+  -ex 'file build/assembly-d' -ex 'disassemble main' \
+  -ex 'disassemble func' 2>/dev/null | sed 's/.*>://' > build/assembly-d.asm
 # NOTE(Ryan): Redirect stderr to avoid a strange "preceeding space" GDB error  
 # NOTE(Ryan): Sed removes byte offset 
 
-g++ -O3 verify.cpp -masm=intel -o build/verify-o
+g++ -O3 assembly.cpp -masm=intel -o build/assembly-o
 gdb -batch -ex 'set disassembly-flavor=intel' \
-  -ex 'file build/verify-o' -ex 'disassemble main' \
-  -ex 'disassemble func' 2>/dev/null | sed 's/.*>://' > build/verify-o.asm
+  -ex 'file build/assembly-o' -ex 'disassemble main' \
+  -ex 'disassemble func' 2>/dev/null | sed 's/.*>://' > build/assembly-o.asm
 
+echo "xxx param1 param2 param3 param4" > misc/time.comparison
+echo -e "arg1" >> misc/time.comparison
+./build/time "arg1" "param1" >> misc/time.comparison
+./build/time "arg1" "param2" >> misc/time.comparison

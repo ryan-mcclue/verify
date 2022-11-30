@@ -4,6 +4,7 @@
 !*/
 
 !.gitignore
-!verify.cpp
+!time.cpp
+!assembly.cpp
 
 !/misc/**/*
