@@ -1,26 +1,54 @@
 // SPDX-License-Identifier: zlib-acknowledgement
 
-int 
-main(int argc, char *argv[])
+unsigned long long 
+time_ns(void)
 {
-  int N = 10000;
+  struct timespec ts = {};
+  clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
+
+  return ((unsigned long long)ts.tv_sec) * 1000000000ULL +
+         (unsigned long long)ts.tv_nsec;
+}
+
+void
+memory(int argc, char *argv[])
+{
+  if (argc < 3) {
+    die_with_usage(argv);
+  }
+
+  int MEMSIZEMB = atoi(argv[2]);
+
+  // If use_thread = 0, measuring pthread launch performance; otherwise
+  // measuring fork performance.
+  int use_thread = 0;
+  if (!strcmp(argv[1], "thread")) {
+    use_thread = 1;
+  } else if (!strcmp(argv[1], "fork")) {
+    use_thread = 0;
+  } else {
+    die_with_usage(argv);
+  }
+
+  int N = 1000;
   unsigned long long minlaunch = 999999;
   unsigned long long totallaunch = 0;
   unsigned long long minjoin = 999999;
   unsigned long long totaljoin = 0;
 
-//      ru_utime (user mode)
-//      ru_stime (kernel mode)
-// long   ru_nvcsw;         /* voluntary context switches */ hasn't finished in time slice given
-// long   ru_nivcsw;        /* involuntary context switches */ higher priority process
-  struct rusage r_usage = {};
-  if (getrusage(RUSAGE_SELF, &r_usage)) {
-    perror("getrusage");
-  } else {
-    printf("From getrusage:\n");
-    printf("  max rss (KiB): %ld\n", ru.ru_maxrss);
+  for (int i = 0; i < N; i++)
+  {
+
   }
-  // args will have individual function and parameter
+
+  printf("%.4f", average_time);
+
+}
+
+int
+main(int argc, char *argv[])
+{
+  memory(argc, argv);
 
   return 0;
 }

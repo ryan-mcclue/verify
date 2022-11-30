@@ -4,19 +4,47 @@ set -e
 
 mkdir -p build
 
-g++ -g3 assembly.cpp -masm=intel -o build/assembly-d
-gdb -batch -ex 'set disassembly-flavor=intel' \
-  -ex 'file build/assembly-d' -ex 'disassemble main' \
-  -ex 'disassemble func' 2>/dev/null | sed 's/.*>://' > build/assembly-d.asm
-# NOTE(Ryan): Redirect stderr to avoid a strange "preceeding space" GDB error  
-# NOTE(Ryan): Sed removes byte offset 
+build_type="assembly"
 
-g++ -O3 assembly.cpp -masm=intel -o build/assembly-o
-gdb -batch -ex 'set disassembly-flavor=intel' \
-  -ex 'file build/assembly-o' -ex 'disassemble main' \
-  -ex 'disassemble func' 2>/dev/null | sed 's/.*>://' > build/assembly-o.asm
+assembly() {
+  local function_name="$1"
+  local binary="assembly-$function_name"
 
-echo "xxx param1 param2 param3 param4" > misc/time.comparison
-echo -e "arg1" >> misc/time.comparison
-./build/time "arg1" "param1" >> misc/time.comparison
-./build/time "arg1" "param2" >> misc/time.comparison
+  mkdir -p build/"$binary"
+
+  g++ -g3 -D"${function_name^^}" assembly.cpp -masm=intel -o build/"$binary"/"$binary"-d
+  gdb -batch -ex "set disassembly-flavor=intel" \
+    -ex "file build/$binary/$binary-d" -ex "disassemble main" \
+    -ex "disassemble $function_name" 2>/dev/null | sed 's/.*>://' > build/"$binary"/"$binary"-d.asm
+  # NOTE(Ryan): Redirect stderr to avoid a strange "preceeding space" GDB error  
+  # NOTE(Ryan): Sed removes byte offset 
+  
+  g++ -O3 -D"${function_name^^}" assembly.cpp -masm=intel -o build/"$binary"/"$binary"-o
+  gdb -batch -ex "set disassembly-flavor=intel" \
+    -ex "file build/$binary/$binary-o" -ex "disassemble main" \
+    -ex "disassemble $function_name" 2>/dev/null | sed 's/.*>://' > build/"$binary"/"$binary"-o.asm
+}
+
+if [[ "$build_type" == "assembly" ]]; then
+  assembly "func"
+elif [[ "$build_type" == "time" ]]; then
+  g++ time.cpp -o build/time
+  time_memory
+fi
+
+time_memory() {
+  local options=( "malloc" "mmap" )
+  local params=( "64" "128" "256" "512" )
+
+  printf "xxxx " > misc/memory.comparison
+  for ((i = 0 ; i < ${#params[@]}; i++)); do
+    printf "%smb " "${params[$i]}" > misc/memory.comparison
+  done
+
+  for ((i = 0 ; i < ${#options[@]}; i++)); do
+    for ((j = 0 ; j < ${#params[@]}; j++)); do
+      ./build/time "${options[i]}" "${params[j]}" >> misc/memory.comparison
+    done
+    printf "\n"
+  done
+}
