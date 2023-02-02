@@ -12,7 +12,7 @@ assembly() {
 
   mkdir -p build/"$binary"
 
-  g++ -g3 -D"${function_name^^}" assembly.cpp -masm=intel -o build/"$binary"/"$binary"-d
+  g++ -g3 -O0 -D"${function_name^^}" assembly.cpp -masm=intel -o build/"$binary"/"$binary"-d
   gdb -batch -ex "set disassembly-flavor=intel" \
     -ex "file build/$binary/$binary-d" -ex "disassemble main" \
     -ex "disassemble $function_name" 2>/dev/null | sed 's/.*>://' > build/"$binary"/"$binary"-d.asm
